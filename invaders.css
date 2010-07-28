@@ -1,0 +1,49 @@
+﻿#pf
+{
+    height:300px;
+    width:660px;
+    border: 1px solid #DDD;
+    margin:50px 50px;
+    padding:10px;
+    position:relative;
+}
+
+#ship
+{
+    height:16px;
+    width:16px;
+    background-color:Red;
+    left:320px;
+    position:absolute;
+    bottom:32px;
+}
+
+.bullet
+{
+    height:10px;
+    width:2px;
+    background-color:Blue;
+    position:absolute;
+    bottom:33px;
+}
+
+table.fleet
+{
+    position:absolute;
+    display:block;
+}
+
+div.fleetRow
+{
+    margin:0px 0px 8px 0px;
+}
+
+.alien
+{
+    height:16px;
+    width:16px;
+    background-color:Orange;
+    display:inline-block;
+    margin: 0px 0px 0px 10px;
+}
+    
