@@ -1,12 +1,17 @@
 ﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
-    (function (ship, playfield, fleet) {
+    (function (ship, playfield, fleet, score) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
         var KEY_P = 80;
         var fleetInterval;
         var bPaused = false;
+        var nScore = 0;
+
+        score.bind('update', function (event, nNewScore) {
+            $(this).text(nNewScore);
+        });
 
         var bulletDone = function () {
             $(this).remove();
@@ -23,7 +28,11 @@ $(function () {
                     aPos.right = aPos.left + $(this).width();
                     aPos.bottom = aPos.top + $(this).height();
                     if (pos.left < aPos.left || pos.top < aPos.top || pos.right > aPos.right || pos.bottom > aPos.bottom) return;
-                    $(this).fadeTo('slow', 0.01, function () { $(this).css({ visibility: 'hidden' }); this.bIgnore = true; });
+                    $(this).fadeTo('slow', 0.01, function () {
+                        $(this).css({ visibility: 'hidden' });
+                        this.bIgnore = true;
+                    });
+                    score.trigger('update', ++nScore);
                     bullet.remove();
                 }
             });
@@ -108,5 +117,5 @@ $(function () {
         };
         fleetInterval = window.setInterval(moveFleet, 200);
 
-    })($('#ship'), $('#pf'), $('table.fleet'));
+    })($('#ship'), $('#pf'), $('table.fleet'), $('#score'));
 });

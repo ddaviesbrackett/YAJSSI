@@ -3,7 +3,7 @@
     height:300px;
     width:660px;
     border: 1px solid #DDD;
-    margin:50px 50px;
+    margin:0px 0px;
     padding:10px;
     position:relative;
 }
@@ -47,3 +47,14 @@ div.fleetRow
     margin: 0px 0px 0px 10px;
 }
     
+#score
+{
+    font-size:30px;
+    font-family:Consolas, fixedsys;
+}
+
+TD.scoring
+{
+    padding-right:10px;
+    vertical-align:top;
+}
