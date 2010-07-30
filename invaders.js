@@ -1,6 +1,6 @@
 ﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
-    (function (ship, playfield, fleet, score) {
+    (function (playfield, fleet, score) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
@@ -10,6 +10,8 @@ $(function () {
         var nScore = 0;
         var nFleetMoveInterval = 200;
         var nFleetMoveSpeed = 60;
+        var ship = $('<div id="ship"></div>');
+        playfield.append(ship);
 
         score.bind('update', function (event, nNewScore) {
             $(this).text(nNewScore);
@@ -85,17 +87,20 @@ $(function () {
             }
         });
 
-        var alien = $('<div class="alien"></div>');
-        var innerFleet = fleet.find('div.fleet');
-        var row = $('<div class="fleetRow"></div>');
-        var currentRow;
-        for (var y = 0; y < 3; y++) {
-            currentRow = row.clone();
-            for (var x = 0; x < 8; x++) {
-                currentRow.append(alien.clone());
+        var seedAliens = function () {
+            var alien = $('<div class="alien"></div>');
+            var innerFleet = fleet.find('div.fleet');
+            var row = $('<div class="fleetRow"></div>');
+            var currentRow;
+            for (var y = 0; y < 3; y++) {
+                currentRow = row.clone();
+                for (var x = 0; x < 8; x++) {
+                    currentRow.append(alien.clone());
+                }
+                innerFleet.append(currentRow);
             }
-            innerFleet.append(currentRow);
-        }
+        };
+        seedAliens();
 
         var bMovedDown = true;
         var bRight = true;
@@ -119,5 +124,5 @@ $(function () {
         };
         $(window).load(function () { fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval); });
 
-    })($('#ship'), $('#pf'), $('table.fleet'), $('#score'));
+    })($('#pf'), $('table.fleet'), $('#score'));
 });
