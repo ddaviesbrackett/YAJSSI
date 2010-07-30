@@ -42,10 +42,23 @@ $(function () {
             });
         };
         ship.nBullets = 0; //nothing shooting at the moment
+        var onBulletPause = function () {
+            $(this).stop();
+        };
+        var onBulletResume = function () {
+            $(this).animate({ bottom: 300 }, {
+                duration: 1500 * $(this).css('bottom').replace(/px$/, "") / 300,
+                easing: 'linear',
+                complete: bulletDone,
+                step: shipBulletStep
+            });
+        };
         var onFire = function () {
             if (ship.nBullets < 2) {
                 ship.nBullets += 1;
                 var b = $('<div class="bullet"></div>');
+                b.bind('pause', onBulletPause);
+                b.bind('resume', onBulletResume);
                 ship.before(b.css({ left: ship.position().left + 8 }));
                 b.animate({ bottom: 300 }, {
                     duration: 1500,
@@ -66,23 +79,23 @@ $(function () {
         }
         ship.bind('move', moveShip);
         $(document).bind('keydown', function (ev) {
-            console.log(ev.which);
-            if (ev.which === KEY_LEFT) {
+            if (ev.which === KEY_LEFT && !bPaused) {
                 ship.trigger('move', -1);
             }
-            else if (ev.which === KEY_RIGHT) {
+            else if (ev.which === KEY_RIGHT && !bPaused) {
                 ship.trigger('move', 1);
             }
-            else if (ev.which === KEY_SPACE) {
+            else if (ev.which === KEY_SPACE && !bPaused) {
                 ship.trigger('fire');
             }
             else if (ev.which === KEY_P) {
                 if (!bPaused) {
-                    //TODO stop bullets too
+                    $('.bullet').trigger('pause');
                     bPaused = true;
                 }
                 else {
                     bPaused = false;
+                    $('.bullet').trigger('resume');
                 }
             }
         });
