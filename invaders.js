@@ -8,6 +8,8 @@ $(function () {
         var fleetInterval;
         var bPaused = false;
         var nScore = 0;
+        var nFleetMoveInterval = 200;
+        var nFleetMoveSpeed = 60;
 
         score.bind('update', function (event, nNewScore) {
             $(this).text(nNewScore);
@@ -74,12 +76,10 @@ $(function () {
             }
             else if (ev.which === KEY_P) {
                 if (!bPaused) {
-                    window.clearInterval(fleetInterval);
                     //TODO stop bullets too
                     bPaused = true;
                 }
                 else {
-                    fleetInterval = window.setInterval(moveFleet, 200);
                     bPaused = false;
                 }
             }
@@ -97,25 +97,27 @@ $(function () {
             innerFleet.append(currentRow);
         }
 
-        var bMovedDown = false;
-        var bRight = false;
+        var bMovedDown = true;
+        var bRight = true;
         var moveFleet = function () {
             var pos = fleet.position();
             pos.right = pos.left + fleet.width();
             var nRight = 0;
             var nDown = 0;
-            if (!bMovedDown && (pos.left < 16 || pos.right > playfield.width())) {
-                nDown = 10;
-                bMovedDown = true;
-                bRight = !bRight;
+            if (!bPaused) {
+                if (!bMovedDown && (pos.left < 16 || pos.right > playfield.width())) {
+                    nDown = 10;
+                    bMovedDown = true;
+                    bRight = !bRight;
+                }
+                else {
+                    nRight = 16;
+                    bMovedDown = false;
+                }
             }
-            else {
-                nRight = 16;
-                bMovedDown = false;
-            }
-            fleet.animate({ left: "+=" + (bRight ? "" : "-") + nRight, top: "+=" + nDown }, 60);
+            fleet.animate({ left: "+=" + (bRight ? "" : "-") + nRight, top: "+=" + nDown }, nFleetMoveSpeed);
         };
-        fleetInterval = window.setInterval(moveFleet, 200);
+        $(window).load(function () { fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval); });
 
     })($('#ship'), $('#pf'), $('table.fleet'), $('#score'));
 });

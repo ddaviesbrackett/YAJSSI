@@ -57,4 +57,6 @@ TD.scoring
 {
     padding-right:10px;
     vertical-align:top;
+    text-align:right;
+    width:120px;
 }
