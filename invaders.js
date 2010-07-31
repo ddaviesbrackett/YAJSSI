@@ -8,6 +8,7 @@ $(function () {
         var fleetInterval;
         var bPaused = false;
         var nScore = 0;
+        var nLives = 3;
         var nFleetMoveInterval = 200;
         var nFleetMoveSpeed = 60;
         var ship = $('<div id="ship"></div>');
@@ -72,10 +73,13 @@ $(function () {
 
         var moveShip = function (event, dir) {
             var pos = $(this).position();
-            if (dir === -1 && pos.left < 16) return;
-            if (dir === 1 && pos.left + 16 > playfield.width()) return;
             $(this).stop(true);
-            $(this).animate({ left: "+=" + (dir * 16) });
+            $(this).animate({ left: dir > 0 ? (playfield.width() - 16) : 0 }, {
+                duration: 3000 * (dir > 0?playfield.width() - pos.left:pos.left) / playfield.width(),
+                easing: 'linear'
+            });
+            event.preventDefault();
+            event.stopPropagation();
         }
         ship.bind('move', moveShip);
         $(document).bind('keydown', function (ev) {
@@ -97,6 +101,11 @@ $(function () {
                     bPaused = false;
                     $('.bullet').trigger('resume');
                 }
+            }
+        });
+        $(document).bind('keyup', function (ev) {
+            if (ev.which === KEY_LEFT || ev.which === KEY_RIGHT) {
+                ship.stop();
             }
         });
 

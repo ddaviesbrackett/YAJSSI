@@ -47,10 +47,12 @@ div.fleetRow
     margin: 0px 0px 0px 10px;
 }
     
-#score
+#score,
+#lives
 {
     font-size:30px;
     font-family:Consolas, fixedsys;
+    margin-left:5px;
 }
 
 TD.scoring
