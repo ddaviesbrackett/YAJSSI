@@ -57,7 +57,7 @@ $(function () {
         var onFire = function () {
             if (ship.nBullets < 2) {
                 ship.nBullets += 1;
-                var b = $('<div class="bullet"></div>');
+                var b = $('<span class="bullet"></span>');
                 b.bind('pause', onBulletPause);
                 b.bind('resume', onBulletResume);
                 ship.before(b.css({ left: ship.position().left + 8 }));
@@ -75,19 +75,19 @@ $(function () {
             var pos = $(this).position();
             $(this).stop(true);
             $(this).animate({ left: dir > 0 ? (playfield.width() - 16) : 0 }, {
-                duration: 3000 * (dir > 0?playfield.width() - pos.left:pos.left) / playfield.width(),
+                duration: 3000 * (dir > 0 ? playfield.width() - pos.left : pos.left) / playfield.width(),
                 easing: 'linear'
             });
             event.preventDefault();
             event.stopPropagation();
         }
-        ship.bind('move', moveShip);
+        ship.bind('moveShip', moveShip);
         $(document).bind('keydown', function (ev) {
             if (ev.which === KEY_LEFT && !bPaused) {
-                ship.trigger('move', -1);
+                ship.trigger('moveShip', -1);
             }
             else if (ev.which === KEY_RIGHT && !bPaused) {
-                ship.trigger('move', 1);
+                ship.trigger('moveShip', 1);
             }
             else if (ev.which === KEY_SPACE && !bPaused) {
                 ship.trigger('fire');
@@ -110,7 +110,7 @@ $(function () {
         });
 
         var seedAliens = function () {
-            var alien = $('<div class="alien"></div>');
+            var alien = $('<span class="alien"></span>');
             var innerFleet = fleet.find('div.fleet');
             var row = $('<div class="fleetRow"></div>');
             var currentRow;
