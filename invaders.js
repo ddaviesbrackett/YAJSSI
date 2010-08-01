@@ -47,25 +47,29 @@ $(function () {
             $(this).stop();
         };
         var onBulletResume = function () {
-            $(this).animate({ bottom: 300 }, {
-                duration: 1500 * $(this).css('bottom').replace(/px$/, "") / 300,
+            var targetLocation = this.isAlien ? { top: playfield.height()} : { bottom: playfield.height() };
+            $(this).animate(targetLocation, {
+                duration: 1500 * (1 - $(this).css('bottom').replace(/px$/, "") / playfield.height()),
                 easing: 'linear',
                 complete: bulletDone,
                 step: shipBulletStep
             });
         };
-        var onFire = function () {
-            if (ship.nBullets < 2) {
-                ship.nBullets += 1;
+        var onFire = function (ev, alien) {
+            var source = alien || ship;
+            var targetLocation = alien ? { top: playfield.height()} : { bottom: playfield.height() };
+            if (source.nBullets < 2) {
+                source.nBullets += 1;
                 var b = $('<span class="bullet"></span>');
                 b.bind('pause', onBulletPause);
                 b.bind('resume', onBulletResume);
-                ship.before(b.css({ left: ship.position().left + 8 }));
-                b.animate({ bottom: 300 }, {
+                source.before(b.css({ left: source.position().left + 8 }));
+                b[0].isAlien = !!alien;
+                b.animate(targetLocation, {
                     duration: 1500,
                     easing: 'linear',
                     complete: bulletDone,
-                    step: shipBulletStep
+                    step: alien ? alienBulletStep : shipBulletStep
                 });
             }
         }
@@ -74,7 +78,7 @@ $(function () {
         var moveShip = function (event, dir) {
             var pos = $(this).position();
             $(this).stop(true);
-            $(this).animate({ left: dir > 0 ? (playfield.width() - 16) : 0 }, {
+            $(this).animate({ left: dir > 0 ? (playfield.width()) : 0 }, {
                 duration: 3000 * (dir > 0 ? playfield.width() - pos.left : pos.left) / playfield.width(),
                 easing: 'linear'
             });
