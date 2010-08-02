@@ -47,15 +47,15 @@ $(function () {
         var onBulletPause = function () {
             $(this).stop();
         };
-        var onBulletResume = function () {
-            $(this).animate({bottom:playfield.height()}, {
+        var onBulletResume = function (ev) {
+            $(this).animate({ bottom: playfield.height() }, {
                 duration: 1500 * (1 - $(this).css('bottom').replace(/px$/, "") / playfield.height()),
                 easing: 'linear',
                 complete: bulletDone,
                 step: shipBulletStep
             });
         };
-        var onFire = function (ev, alien) {
+        var onFire = function (ev) {
             if (ship.nBullets < 2) {
                 ship.nBullets += 1;
                 var b = $('<span class="bullet shipBullet"></span>');
@@ -71,7 +71,31 @@ $(function () {
             }
         }
         ship.bind('fire', onFire);
-        $('.alien').live('fire', onFire);
+        var alienBulletStep = function () { };
+        var alienBulletResume = function () {
+            $(this).animate({ top: playfield.height() }, {
+                duration: 1500 * (1 - $(this).css('top').replace(/px$/, "") / playfield.height()),
+                easing: 'linear',
+                complete: function () { $(this).remove(); },
+                step: alienBulletStep
+            });
+        };
+        var onAlienFire = function (ev) {
+            var b = $('<span class="bullet alienBullet"></span>');
+            var alien = $(this);
+            var aOffset = alien.offset();
+            b.bind('pause', onBulletPause);
+            b.bind('resume', alienBulletResume);
+            playfield.before(b.css({ left: aOffset.left + 8, top: aOffset.top + alien.height() }));
+            b.animate({ top: playfield.height() }, {
+                duration: 1500,
+                easing: 'linear',
+                complete: function () { $(this).remove(); },
+                step: alienBulletStep
+            });
+        };
+
+        $('.alien').live('fire', onAlienFire);
 
         var moveShip = function (event, dir) {
             var pos = $(this).position();
@@ -84,6 +108,18 @@ $(function () {
             event.stopPropagation();
         }
         ship.bind('moveShip', moveShip);
+
+        var doPause = function () {
+            if (!bPaused) {
+                $('.bullet').trigger('pause');
+                bPaused = true;
+            }
+            else {
+                bPaused = false;
+                $('.bullet').trigger('resume');
+            }
+        };
+
         $(document).bind('keydown', function (ev) {
             if (ev.which === KEY_LEFT && !bPaused) {
                 ship.trigger('moveShip', -1);
@@ -95,14 +131,10 @@ $(function () {
                 ship.trigger('fire');
             }
             else if (ev.which === KEY_P) {
-                if (!bPaused) {
-                    $('.bullet').trigger('pause');
-                    bPaused = true;
-                }
-                else {
-                    bPaused = false;
-                    $('.bullet').trigger('resume');
-                }
+                doPause();
+            }
+            else if (ev.which === 79) {
+                $('.alien').eq(4).trigger('fire');
             }
         });
         $(document).bind('keyup', function (ev) {

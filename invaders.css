@@ -18,12 +18,15 @@
     bottom:32px;
 }
 
-.shipBullet
+.bullet
 {
     height:10px;
     width:2px;
     background-color:Blue;
     position:absolute;
+}
+.shipBullet
+{
     bottom:33px;
 }
 
