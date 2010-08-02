@@ -32,7 +32,8 @@ $(function () {
                     var aPos = $(this).offset();
                     aPos.right = aPos.left + $(this).width();
                     aPos.bottom = aPos.top + $(this).height();
-                    if (pos.left < aPos.left || pos.top < aPos.top || pos.right > aPos.right || pos.bottom > aPos.bottom) return;
+                    if (pos.bottom < aPos.top || pos.top > aPos.bottom ||
+                        pos.right < aPos.left || pos.left > aPos.right) return;
                     $(this).fadeTo('slow', 0.01, function () {
                         $(this).css({ visibility: 'hidden' });
                         this.bIgnore = true;
@@ -47,8 +48,7 @@ $(function () {
             $(this).stop();
         };
         var onBulletResume = function () {
-            var targetLocation = this.isAlien ? { top: playfield.height()} : { bottom: playfield.height() };
-            $(this).animate(targetLocation, {
+            $(this).animate({bottom:playfield.height()}, {
                 duration: 1500 * (1 - $(this).css('bottom').replace(/px$/, "") / playfield.height()),
                 easing: 'linear',
                 complete: bulletDone,
@@ -56,24 +56,22 @@ $(function () {
             });
         };
         var onFire = function (ev, alien) {
-            var source = alien || ship;
-            var targetLocation = alien ? { top: playfield.height()} : { bottom: playfield.height() };
-            if (source.nBullets < 2) {
-                source.nBullets += 1;
-                var b = $('<span class="bullet"></span>');
+            if (ship.nBullets < 2) {
+                ship.nBullets += 1;
+                var b = $('<span class="bullet shipBullet"></span>');
                 b.bind('pause', onBulletPause);
                 b.bind('resume', onBulletResume);
-                source.before(b.css({ left: source.position().left + 8 }));
-                b[0].isAlien = !!alien;
-                b.animate(targetLocation, {
+                playfield.append(b.css({ left: ship.position().left + 8 }));
+                b.animate({ bottom: playfield.height() }, {
                     duration: 1500,
                     easing: 'linear',
                     complete: bulletDone,
-                    step: alien ? alienBulletStep : shipBulletStep
+                    step: shipBulletStep
                 });
             }
         }
         ship.bind('fire', onFire);
+        $('.alien').live('fire', onFire);
 
         var moveShip = function (event, dir) {
             var pos = $(this).position();
