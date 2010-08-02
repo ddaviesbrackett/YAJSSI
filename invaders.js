@@ -6,11 +6,13 @@ $(function () {
         var KEY_SPACE = 32;
         var KEY_P = 80;
         var fleetInterval;
+        var alienFireInterval;
         var bPaused = false;
         var nScore = 0;
         var nLives = 3;
-        var nFleetMoveInterval = 200;
-        var nFleetMoveSpeed = 60;
+        var nFleetMoveInterval = 400;
+        var nFleetMoveSpeed = 120;
+        var nAlienFireInterval = 1400;
         var ship = $('<div id="ship"></div>');
         playfield.append(ship);
 
@@ -208,7 +210,18 @@ $(function () {
             }
             fleet.animate({ left: "+=" + (bRight ? "" : "-") + nRight, top: "+=" + nDown }, nFleetMoveSpeed);
         };
-        $(window).load(function () { fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval); });
+
+        var alienFire = function () {
+            if (!bPaused) {
+                var aliens = $('.alien'), num = aliens.length;
+                firingAlien = aliens.eq(Math.round(Math.random() * num));
+                firingAlien.trigger('fire');
+            }
+        }
+        $(window).load(function () {
+            fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval);
+            alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
+        });
 
     })($('#pf'), $('table.fleet'), $('#score'), $('#lives'));
 });
