@@ -1,6 +1,6 @@
 ﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
-    (function (playfield, fleet, score) {
+    (function (playfield, fleet, score, lives) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
@@ -18,15 +18,19 @@ $(function () {
             $(this).text(nNewScore);
         });
 
+        lives.bind('update', function (event, nNewLives) {
+            $(this).text(nNewLives);
+        });
+
         var bulletDone = function () {
             $(this).remove();
             ship.nBullets -= 1;
         };
         var shipBulletStep = function () {
-            var pos = $(this).offset();
-            pos.right = pos.left + $(this).width();
-            pos.bottom = pos.top + $(this).height();
             var bullet = $(this);
+            var pos = bullet.offset();
+            pos.right = pos.left + bullet.width();
+            pos.bottom = pos.top + bullet.height();
             $('.alien').each(function (ix) {
                 if (!this.bIgnore) {
                     var aPos = $(this).offset();
@@ -71,7 +75,33 @@ $(function () {
             }
         }
         ship.bind('fire', onFire);
-        var alienBulletStep = function () { };
+        var alienBulletStep = function () {
+            var bullet = $(this);
+            var pos = bullet.offset();
+            pos.right = pos.left + bullet.width();
+            pos.bottom = pos.top + bullet.height();
+            var sPos = ship.offset();
+            sPos.right = sPos + ship.width();
+            sPos.bottom = sPos + ship.height();
+            if (pos.bottom < sPos.top || pos.top > sPos.bottom ||
+                pos.right < sPos.left || pos.left > sPos.right) return;
+            ship.fadeOut('slow', function () {
+                if (--nLives < 0) {
+                    alert('game over!');
+                    doPause();
+                    $(document).unbind('keydown.master');
+                }
+                else {
+                    lives.trigger('update', nLives);
+                    doPause();
+                    setTimeout(function () {
+                        ship.fadeIn();
+                        doPause();
+                    }, 1500);
+                }
+            });
+            bullet.remove();
+        };
         var alienBulletResume = function () {
             $(this).animate({ top: playfield.height() }, {
                 duration: 1500 * (1 - $(this).css('top').replace(/px$/, "") / playfield.height()),
@@ -120,7 +150,7 @@ $(function () {
             }
         };
 
-        $(document).bind('keydown', function (ev) {
+        $(document).bind('keydown.master', function (ev) {
             if (ev.which === KEY_LEFT && !bPaused) {
                 ship.trigger('moveShip', -1);
             }
@@ -180,5 +210,5 @@ $(function () {
         };
         $(window).load(function () { fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval); });
 
-    })($('#pf'), $('table.fleet'), $('#score'));
+    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'));
 });
