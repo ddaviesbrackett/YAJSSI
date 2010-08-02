@@ -78,31 +78,45 @@ $(function () {
         }
         ship.bind('fire', onFire);
         var alienBulletStep = function () {
-            var bullet = $(this);
-            var pos = bullet.offset();
-            pos.right = pos.left + bullet.width();
-            pos.bottom = pos.top + bullet.height();
-            var sPos = ship.offset();
-            sPos.right = sPos + ship.width();
-            sPos.bottom = sPos + ship.height();
-            if (pos.bottom < sPos.top || pos.top > sPos.bottom ||
+            if (!ship.isDying) {
+                var bullet = $(this);
+                var pos = bullet.offset();
+                pos.right = pos.left + bullet.width();
+                pos.bottom = pos.top + bullet.height();
+                var sPos = ship.offset();
+                sPos.right = sPos.left + ship.width();
+                sPos.bottom = sPos.top + ship.height();
+                if (pos.bottom < sPos.top || pos.top > sPos.bottom ||
                 pos.right < sPos.left || pos.left > sPos.right) return;
-            ship.fadeOut('slow', function () {
-                if (--nLives < 0) {
-                    alert('game over!');
-                    doPause();
-                    $(document).unbind('keydown.master');
-                }
-                else {
-                    lives.trigger('update', nLives);
-                    doPause();
-                    setTimeout(function () {
-                        ship.fadeIn();
-                        doPause();
-                    }, 1500);
-                }
-            });
-            bullet.remove();
+                ship.isDying = true;
+                ship.stop(true);
+                ship.animate({ opacity: 'hide' }, {
+                    speed: 'slow',
+                    queue: false,
+                    complete: function () {
+                        if (--nLives < 0) {
+                            alert('game over!');
+                            doPause();
+                            $(document).unbind('keydown.master');
+                        }
+                        else {
+                            lives.trigger('update', nLives);
+                            doPause();
+                            setTimeout(function () {
+                                ship.animate({ opacity: 'show' }, {
+                                    speed: 'fast',
+                                    queue: false,
+                                    complete: function () {
+                                        ship.isDying = false;
+                                        doPause();
+                                    }
+                                });
+                            }, 1500);
+                        }
+                    }
+                });
+                bullet.remove();
+            };
         };
         var alienBulletResume = function () {
             $(this).animate({ top: playfield.height() }, {
@@ -153,10 +167,10 @@ $(function () {
         };
 
         $(document).bind('keydown.master', function (ev) {
-            if (ev.which === KEY_LEFT && !bPaused) {
+            if (ev.which === KEY_LEFT && !bPaused && !ship.isDying) {
                 ship.trigger('moveShip', -1);
             }
-            else if (ev.which === KEY_RIGHT && !bPaused) {
+            else if (ev.which === KEY_RIGHT && !bPaused && !ship.isDying) {
                 ship.trigger('moveShip', 1);
             }
             else if (ev.which === KEY_SPACE && !bPaused) {
@@ -170,7 +184,7 @@ $(function () {
             }
         });
         $(document).bind('keyup', function (ev) {
-            if (ev.which === KEY_LEFT || ev.which === KEY_RIGHT) {
+            if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !ship.isDying) {
                 ship.stop();
             }
         });
@@ -213,7 +227,7 @@ $(function () {
 
         var alienFire = function () {
             if (!bPaused) {
-                var aliens = $('.alien'), num = aliens.length;
+                var aliens = $('.alien').filter(function () { return !this.bIgnore; }), num = aliens.length;
                 firingAlien = aliens.eq(Math.round(Math.random() * num));
                 firingAlien.trigger('fire');
             }
