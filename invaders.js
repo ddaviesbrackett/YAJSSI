@@ -10,6 +10,7 @@ $(function () {
         var bPaused = false;
         var nScore = 0;
         var nLives = 3;
+        var nLevel = 0;
         var nFleetMoveInterval = 400;
         var nFleetMoveSpeed = 120;
         var nAlienFireInterval = 1400;
@@ -33,20 +34,19 @@ $(function () {
             var pos = bullet.offset();
             pos.right = pos.left + bullet.width();
             pos.bottom = pos.top + bullet.height();
-            $('.alien').each(function (ix) {
-                if (!this.bIgnore) {
-                    var aPos = $(this).offset();
-                    aPos.right = aPos.left + $(this).width();
-                    aPos.bottom = aPos.top + $(this).height();
-                    if (pos.bottom < aPos.top || pos.top > aPos.bottom ||
-                        pos.right < aPos.left || pos.left > aPos.right) return;
-                    $(this).fadeTo('slow', 0.01, function () {
-                        $(this).css({ visibility: 'hidden' });
-                        this.bIgnore = true;
-                    });
-                    score.trigger('update', ++nScore);
-                    bullet.remove();
-                }
+            $('.alien').filter(function(){return !this.bIgnore;}).each(function (ix) {
+                var aPos = $(this).offset();
+                aPos.right = aPos.left + $(this).width();
+                aPos.bottom = aPos.top + $(this).height();
+                if (pos.bottom < aPos.top || pos.top > aPos.bottom ||
+                    pos.right < aPos.left || pos.left > aPos.right) return;
+                $(this).fadeTo('slow', 0.01, function () {
+                    $(this).css({ visibility: 'hidden' });
+                    this.bIgnore = true;
+                    if($('.alien').filter(function(){return !this.bIgnore;}).length < 1) newLevel();
+                });
+                score.trigger('update', ++nScore);
+                bullet.remove();
             });
         };
         ship.nBullets = 0; //nothing shooting at the moment
@@ -190,19 +190,32 @@ $(function () {
         });
 
         var seedAliens = function () {
+            fleet.css({ left: 10, top: 10 });
+            bMovedDown = true;
+            bRight = true;
             var alien = $('<span class="alien"></span>');
             var innerFleet = fleet.find('div.fleet');
+            innerFleet.html('');
             var row = $('<div class="fleetRow"></div>');
             var currentRow;
-            for (var y = 0; y < 3; y++) {
+            for (var y = 0; y < 2; y++) {
                 currentRow = row.clone();
-                for (var x = 0; x < 8; x++) {
+                for (var x = 0; x < 4; x++) {
                     currentRow.append(alien.clone());
                 }
                 innerFleet.append(currentRow);
             }
         };
-        seedAliens();
+
+        var newLevel = function () {
+            alert("level " + ++nLevel);
+            nFleetMoveInterval *= 0.9;
+            nFleetMoveSpeed *= 0.9;
+            nAlienFireInterval *= 0.9;
+            seedAliens();
+        };
+
+        newLevel();
 
         var bMovedDown = true;
         var bRight = true;
