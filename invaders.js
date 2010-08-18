@@ -34,7 +34,7 @@ $(function () {
             var pos = bullet.offset();
             pos.right = pos.left + bullet.width();
             pos.bottom = pos.top + bullet.height();
-            $('.alien').filter(function(){return !this.bIgnore;}).each(function (ix) {
+            $('.alien').filter(function () { return !this.bIgnore; }).each(function (ix) {
                 var aPos = $(this).offset();
                 aPos.right = aPos.left + $(this).width();
                 aPos.bottom = aPos.top + $(this).height();
@@ -43,7 +43,7 @@ $(function () {
                 $(this).fadeTo('slow', 0.01, function () {
                     $(this).css({ visibility: 'hidden' });
                     this.bIgnore = true;
-                    if($('.alien').filter(function(){return !this.bIgnore;}).length < 1) newLevel();
+                    if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) newLevel();
                 });
                 score.trigger('update', ++nScore);
                 bullet.remove();
@@ -155,8 +155,12 @@ $(function () {
         }
         ship.bind('moveShip', moveShip);
 
-        var doPause = function () {
-            if (!bPaused) {
+        var doPause = function (force) {
+            if (force) {
+                bPaused = force === 'pause';
+                $('.bullet').trigger(bPaused ? 'pause' : 'resume');
+            }
+            else if (!bPaused) {
                 $('.bullet').trigger('pause');
                 bPaused = true;
             }
