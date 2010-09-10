@@ -79,6 +79,7 @@ $(function () {
         $ship.bind('fire', onFire);
         var alienBulletStep = function () {
             if (!$ship.isDying) {
+                var complete = false;
                 var bullet = $(this);
                 var pos = bullet.offset();
                 pos.right = pos.left + bullet.width();
@@ -90,32 +91,35 @@ $(function () {
                 pos.right < sPos.left || pos.left > sPos.right) return;
                 $ship.isDying = true;
                 $ship.stop(true);
+                bullet.stop(true);
                 $ship.find('div#ship').animate({ opacity: 'hide' }, {
                     speed: 'slow',
-                    queue: false,
                     complete: function () {
-                        if (--nLives < 0) {
-                            alert('game over!');
-                            doPause('pause');
-                            $(document).unbind('keydown.master');
-                        }
-                        else {
-                            lives.trigger('update', nLives);
-                            doPause('pause');
-                            setTimeout(function () {
-                                $ship.find('div#ship').animate({ opacity: 'show' }, {
-                                    speed: 'fast',
-                                    queue: false,
-                                    complete: function () {
-                                        $ship.isDying = false;
-                                        doPause('resume');
-                                    }
-                                });
-                            }, 1500);
+                        if (!complete) {
+                            complete = true;
+                            bullet.remove();
+                            if (--nLives < 0) {
+                                alert('game over!');
+                                doPause('pause');
+                                $(document).unbind('keydown.master');
+                            }
+                            else {
+                                lives.trigger('update', nLives);
+                                doPause('pause');
+                                setTimeout(function () {
+                                    $ship.find('div#ship').animate({ opacity: 'show' }, {
+                                        speed: 'fast',
+                                        queue: false,
+                                        complete: function () {
+                                            $ship.isDying = false;
+                                            doPause('resume');
+                                        }
+                                    });
+                                }, 1500);
+                            }
                         }
                     }
                 });
-                bullet.remove();
             };
         };
         var alienBulletResume = function () {
