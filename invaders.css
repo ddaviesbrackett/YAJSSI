@@ -13,6 +13,12 @@
     height:16px;
     width:16px;
     background-color:Red;
+}
+
+#shipmover
+{
+    height:16px;
+    width:16px;
     left:320px;
     position:absolute;
     bottom:32px;

@@ -2,6 +2,7 @@ bugs:
 
 stop() isn't good enough for stopping moving, because it murders fades as well (so moving while dying sucks)
   --either that, or no moving while dying, which makes sense...
+  --solution is not to apply fades and dying stuff to the same element as move.
 
 investigate dequeue() as a mechanism for unpausing animations rather than doing the crazy bPause thing
 	--doesn't work!  I mean, it works fine for inserting delays, but doesn't for arbitrary pausing (unless I feel like reimplementing .animate()).

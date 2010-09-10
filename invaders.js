@@ -14,8 +14,8 @@ $(function () {
         var nFleetMoveInterval = 400;
         var nFleetMoveSpeed = 120;
         var nAlienFireInterval = 1400;
-        var ship = $('<div id="ship"></div>');
-        playfield.append(ship);
+        var $ship = $('<div id="shipmover"><div id="ship"></div></div>');
+        playfield.append($ship);
 
         score.bind('update', function (event, nNewScore) {
             $(this).text(nNewScore);
@@ -27,7 +27,7 @@ $(function () {
 
         var bulletDone = function () {
             $(this).remove();
-            ship.nBullets -= 1;
+            $ship.nBullets -= 1;
         };
         var shipBulletStep = function () {
             var bullet = $(this);
@@ -49,7 +49,7 @@ $(function () {
                 bullet.remove();
             });
         };
-        ship.nBullets = 0; //nothing shooting at the moment
+        $ship.nBullets = 0; //nothing shooting at the moment
         var onBulletPause = function () {
             $(this).stop();
         };
@@ -62,12 +62,12 @@ $(function () {
             });
         };
         var onFire = function (ev) {
-            if (ship.nBullets < 2) {
-                ship.nBullets += 1;
+            if ($ship.nBullets < 2) {
+                $ship.nBullets += 1;
                 var b = $('<span class="bullet shipBullet"></span>');
                 b.bind('pause', onBulletPause);
                 b.bind('resume', onBulletResume);
-                playfield.append(b.css({ left: ship.position().left + 8 }));
+                playfield.append(b.css({ left: $ship.position().left + 8 }));
                 b.animate({ bottom: playfield.height() }, {
                     duration: 1500,
                     easing: 'linear',
@@ -76,39 +76,39 @@ $(function () {
                 });
             }
         }
-        ship.bind('fire', onFire);
+        $ship.bind('fire', onFire);
         var alienBulletStep = function () {
-            if (!ship.isDying) {
+            if (!$ship.isDying) {
                 var bullet = $(this);
                 var pos = bullet.offset();
                 pos.right = pos.left + bullet.width();
                 pos.bottom = pos.top + bullet.height();
-                var sPos = ship.offset();
-                sPos.right = sPos.left + ship.width();
-                sPos.bottom = sPos.top + ship.height();
+                var sPos = $ship.offset();
+                sPos.right = sPos.left + $ship.width();
+                sPos.bottom = sPos.top + $ship.height();
                 if (pos.bottom < sPos.top || pos.top > sPos.bottom ||
                 pos.right < sPos.left || pos.left > sPos.right) return;
-                ship.isDying = true;
-                ship.stop(true);
-                ship.animate({ opacity: 'hide' }, {
+                $ship.isDying = true;
+                $ship.stop(true);
+                $ship.find('div#ship').animate({ opacity: 'hide' }, {
                     speed: 'slow',
                     queue: false,
                     complete: function () {
                         if (--nLives < 0) {
                             alert('game over!');
-                            doPause();
+                            doPause('pause');
                             $(document).unbind('keydown.master');
                         }
                         else {
                             lives.trigger('update', nLives);
-                            doPause();
+                            doPause('pause');
                             setTimeout(function () {
-                                ship.animate({ opacity: 'show' }, {
+                                $ship.find('div#ship').animate({ opacity: 'show' }, {
                                     speed: 'fast',
                                     queue: false,
                                     complete: function () {
-                                        ship.isDying = false;
-                                        doPause();
+                                        $ship.isDying = false;
+                                        doPause('resume');
                                     }
                                 });
                             }, 1500);
@@ -144,6 +144,7 @@ $(function () {
         $('.alien').live('fire', onAlienFire);
 
         var moveShip = function (event, dir) {
+            if ($ship.isDying) return;
             var pos = $(this).position();
             $(this).stop(true);
             $(this).animate({ left: dir > 0 ? (playfield.width()) : 0 }, {
@@ -153,7 +154,7 @@ $(function () {
             event.preventDefault();
             event.stopPropagation();
         }
-        ship.bind('moveShip', moveShip);
+        $ship.bind('moveShip', moveShip);
 
         var doPause = function (force) {
             if (force) {
@@ -171,14 +172,14 @@ $(function () {
         };
 
         $(document).bind('keydown.master', function (ev) {
-            if (ev.which === KEY_LEFT && !bPaused && !ship.isDying) {
-                ship.trigger('moveShip', -1);
+            if (ev.which === KEY_LEFT && !bPaused) {
+                $ship.trigger('moveShip', -1);
             }
-            else if (ev.which === KEY_RIGHT && !bPaused && !ship.isDying) {
-                ship.trigger('moveShip', 1);
+            else if (ev.which === KEY_RIGHT && !bPaused) {
+                $ship.trigger('moveShip', 1);
             }
             else if (ev.which === KEY_SPACE && !bPaused) {
-                ship.trigger('fire');
+                $ship.trigger('fire');
             }
             else if (ev.which === KEY_P) {
                 doPause();
@@ -188,8 +189,8 @@ $(function () {
             }
         });
         $(document).bind('keyup', function (ev) {
-            if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !ship.isDying) {
-                ship.stop();
+            if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !$ship.isDying) {
+                $ship.stop();
             }
         });
 
@@ -212,10 +213,10 @@ $(function () {
         };
 
         var newLevel = function () {
-            alert("level " + ++nLevel);
-            nFleetMoveInterval *= 0.9;
-            nFleetMoveSpeed *= 0.9;
-            nAlienFireInterval *= 0.9;
+            alert(" this really needs to move. level " + ++nLevel);
+            nFleetMoveInterval *= 0.6;
+            nFleetMoveSpeed *= 0.6;
+            nAlienFireInterval *= 0.6;
             seedAliens();
         };
 
