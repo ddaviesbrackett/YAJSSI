@@ -1,6 +1,6 @@
 ﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
-    (function (playfield, fleet, score, lives, level) {
+    (function (playfield, fleet, score, lives, level, message) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
@@ -13,21 +13,19 @@ $(function () {
         var nLives = 3;
         var nLevel = 0;
         var nFleetMoveInterval = 400;
-        var nFleetMoveSpeed = 120;
-        var nAlienFireInterval = 1400;
+        var nFleetMoveSpeed = 220;
+        var nAlienFireInterval = 700;
+
+        var nRowsOfAliens = 4;
+        var nColumnsOfAliens = 6;
+
         var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
         playfield.append($ship);
 
-        score.bind('update', function (event, nNewScore) {
-            $(this).text(nNewScore);
-        });
-
-        lives.bind('update', function (event, nNewLives) {
-            $(this).text(nNewLives);
-        });
-
-        level.bind('update', function (event, nNewLevel) {
-            $(this).text(nNewLevel);
+        $.each([score, lives, level, message], function () {
+            $(this).bind('update', function (event, text) {
+                $(this).text(text);
+            });
         });
 
         var elIntersect = function (el1, el2) {
@@ -101,6 +99,8 @@ $(function () {
                 $ship.isDying = true;
                 $ship.stop(true);
                 bullet.stop(true);
+                doPause('pause');
+                message.trigger('update', " "); //suppress the paused message
                 $ship.find('div#ship').animate({ opacity: 'hide' }, {
                     speed: 'slow',
                     complete: function () {
@@ -108,13 +108,12 @@ $(function () {
                             complete = true;
                             bullet.remove();
                             if (--nLives < 0) {
-                                alert('game over!');
                                 doPause('pause');
+                                message.trigger('update', 'GAME OVER');
                                 $(document).unbind('keydown.master');
                             }
                             else {
                                 lives.trigger('update', nLives);
-                                doPause('pause');
                                 setTimeout(function () {
                                     $ship.find('div#ship').animate({ opacity: 'show' }, {
                                         speed: 'fast',
@@ -171,15 +170,17 @@ $(function () {
 
         var doPause = function (force) {
             if (force) {
-                bPaused = force === 'pause';
-                $('.bullet').trigger(bPaused ? 'pause' : 'resume');
+                bPaused = force !== 'pause'; //invert and follow on to the rest
             }
-            else if (!bPaused) {
+
+            if (!bPaused) {
                 $('.bullet').trigger('pause');
                 bPaused = true;
+                message.trigger('update', 'Paused'); message.show();
             }
             else {
                 bPaused = false;
+                message.trigger('update', ""); message.hide();
                 $('.bullet').trigger('resume');
             }
         };
@@ -188,6 +189,7 @@ $(function () {
             if (!bStarted) {
                 start();
                 bStarted = true;
+                message.hide();
                 ev.preventDefault();
                 return;
             }
@@ -223,9 +225,9 @@ $(function () {
             innerFleet.html('');
             var row = $('<div class="fleetRow"></div>');
             var currentRow;
-            for (var y = 0; y < 2; y++) {
+            for (var y = 0; y < nRowsOfAliens; y++) {
                 currentRow = row.clone();
-                for (var x = 0; x < 4; x++) {
+                for (var x = 0; x < nColumnsOfAliens; x++) {
                     currentRow.append(alien.clone());
                 }
                 innerFleet.append(currentRow);
@@ -279,5 +281,5 @@ $(function () {
             alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
         });
 
-    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'), $('#level'));
+    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'), $('#level'), $('#message'));
 });

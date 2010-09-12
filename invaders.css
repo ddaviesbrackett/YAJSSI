@@ -1,7 +1,7 @@
 ﻿#pf
 {
-    height:300px;
-    width:660px;
+    height:400px;
+    width:800px;
     border: 1px solid #DDD;
     margin:0px 0px;
     padding:10px;
@@ -19,7 +19,7 @@
 {
     height:16px;
     width:16px;
-    left:320px;
+    left:400px;
     position:absolute;
     bottom:32px;
 }
@@ -71,4 +71,14 @@ TD.scoring
     vertical-align:top;
     text-align:right;
     width:120px;
+}
+
+#message
+{
+    font-size:30px;
+    font-family:Consolas, fixedsys;
+    position:relative;
+    width:400px;
+    margin:120px auto 0px auto;
+    text-align:center;
 }
