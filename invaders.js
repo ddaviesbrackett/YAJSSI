@@ -14,7 +14,7 @@ $(function () {
         var nFleetMoveInterval = 400;
         var nFleetMoveSpeed = 120;
         var nAlienFireInterval = 1400;
-        var $ship = $('<div id="shipmover"><div id="ship"></div></div>');
+        var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
         playfield.append($ship);
 
         score.bind('update', function (event, nNewScore) {
@@ -25,30 +25,43 @@ $(function () {
             $(this).text(nNewLives);
         });
 
+        var intersect = function (rect1, rect2) {
+            return !(rect1.bottom < rect2.top || rect1.top > rect2.bottom ||
+                     rect1.right < rect2.left || rect1.left > rect2.right);
+        }
+
+        var boundingRect = function (el) {
+            var of = $(el).offset();
+            return {
+                top: of.top,
+                left: of.left,
+                right: of.left + $(el).width(),
+                bottom: of.top + $(el).height()
+            };
+        };
+
+        var elIntersect = function (el1, el2) {
+            return intersect(boundingRect(el1), boundingRect(el2));
+        };
+
         var bulletDone = function () {
             $(this).remove();
             $ship.nBullets -= 1;
         };
         var shipBulletStep = function () {
             var bullet = $(this);
-            var pos = bullet.offset();
-            pos.right = pos.left + bullet.width();
-            pos.bottom = pos.top + bullet.height();
             $('.alien').filter(function () { return !this.bIgnore; }).each(function (ix) {
-                var aPos = $(this).offset();
-                aPos.right = aPos.left + $(this).width();
-                aPos.bottom = aPos.top + $(this).height();
-                if (pos.bottom < aPos.top || pos.top > aPos.bottom ||
-                    pos.right < aPos.left || pos.left > aPos.right) return;
+                if (!elIntersect(bullet, this)) { return; }
                 $(this).fadeTo('slow', 0.01, function () {
                     $(this).css({ visibility: 'hidden' });
                     this.bIgnore = true;
-                    if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) newLevel();
+                    if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) { newLevel(); }
                 });
                 score.trigger('update', ++nScore);
                 bullet.remove();
             });
         };
+
         $ship.nBullets = 0; //nothing shooting at the moment
         var onBulletPause = function () {
             $(this).stop();
@@ -81,14 +94,7 @@ $(function () {
             if (!$ship.isDying) {
                 var complete = false;
                 var bullet = $(this);
-                var pos = bullet.offset();
-                pos.right = pos.left + bullet.width();
-                pos.bottom = pos.top + bullet.height();
-                var sPos = $ship.offset();
-                sPos.right = sPos.left + $ship.width();
-                sPos.bottom = sPos.top + $ship.height();
-                if (pos.bottom < sPos.top || pos.top > sPos.bottom ||
-                pos.right < sPos.left || pos.left > sPos.right) return;
+                if (!elIntersect(bullet, $ship)) { return; }
                 $ship.isDying = true;
                 $ship.stop(true);
                 bullet.stop(true);
