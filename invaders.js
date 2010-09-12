@@ -25,22 +25,20 @@ $(function () {
             $(this).text(nNewLives);
         });
 
-        var intersect = function (rect1, rect2) {
-            return !(rect1.bottom < rect2.top || rect1.top > rect2.bottom ||
-                     rect1.right < rect2.left || rect1.left > rect2.right);
-        }
-
-        var boundingRect = function (el) {
-            var of = $(el).offset();
-            return {
-                top: of.top,
-                left: of.left,
-                right: of.left + $(el).width(),
-                bottom: of.top + $(el).height()
-            };
-        };
-
         var elIntersect = function (el1, el2) {
+            var intersect = function (rect1, rect2) {
+                return !(rect1.bottom < rect2.top || rect1.top > rect2.bottom ||
+                     rect1.right < rect2.left || rect1.left > rect2.right);
+            };
+            var boundingRect = function (el) {
+                var of = $(el).offset();
+                return {
+                    top: of.top,
+                    left: of.left,
+                    right: of.left + $(el).width(),
+                    bottom: of.top + $(el).height()
+                };
+            };
             return intersect(boundingRect(el1), boundingRect(el2));
         };
 
@@ -88,7 +86,7 @@ $(function () {
                     step: shipBulletStep
                 });
             }
-        }
+        };
         $ship.bind('fire', onFire);
         var alienBulletStep = function () {
             if (!$ship.isDying) {
@@ -126,7 +124,7 @@ $(function () {
                         }
                     }
                 });
-            };
+            }
         };
         var alienBulletResume = function () {
             $(this).animate({ top: playfield.height() }, {
@@ -154,7 +152,7 @@ $(function () {
         $('.alien').live('fire', onAlienFire);
 
         var moveShip = function (event, dir) {
-            if ($ship.isDying) return;
+            if ($ship.isDying) { return; }
             var pos = $(this).position();
             $(this).stop(true);
             $(this).animate({ left: dir > 0 ? (playfield.width()) : 0 }, {
@@ -223,7 +221,8 @@ $(function () {
         };
 
         var newLevel = function () {
-            alert(" this really needs to move. level " + ++nLevel);
+            nLevel += 1;
+            alert(" this really needs to move. level " + nLevel);
             nFleetMoveInterval *= 0.6;
             nFleetMoveSpeed *= 0.6;
             nAlienFireInterval *= 0.6;
@@ -255,11 +254,11 @@ $(function () {
 
         var alienFire = function () {
             if (!bPaused) {
-                var aliens = $('.alien').filter(function () { return !this.bIgnore; }), num = aliens.length;
-                firingAlien = aliens.eq(Math.round(Math.random() * num));
-                firingAlien.trigger('fire');
+                var aliens = $('.alien').filter(function () { return !this.bIgnore; }), num = aliens.length * 2;
+                aliens.eq(Math.round(Math.random() * num)).trigger('fire'); //num is double, so eq only finds an element half the time, so they only fire half the time
             }
-        }
+        };
+
         $(window).load(function () {
             fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval);
             alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
