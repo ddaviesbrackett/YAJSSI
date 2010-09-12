@@ -1,6 +1,6 @@
 ﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
-    (function (playfield, fleet, score, lives) {
+    (function (playfield, fleet, score, lives, level) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
@@ -8,6 +8,7 @@ $(function () {
         var fleetInterval;
         var alienFireInterval;
         var bPaused = false;
+        var bStarted = false;
         var nScore = 0;
         var nLives = 3;
         var nLevel = 0;
@@ -23,6 +24,10 @@ $(function () {
 
         lives.bind('update', function (event, nNewLives) {
             $(this).text(nNewLives);
+        });
+
+        level.bind('update', function (event, nNewLevel) {
+            $(this).text(nNewLevel);
         });
 
         var elIntersect = function (el1, el2) {
@@ -50,9 +55,9 @@ $(function () {
             var bullet = $(this);
             $('.alien').filter(function () { return !this.bIgnore; }).each(function (ix) {
                 if (!elIntersect(bullet, this)) { return; }
+                this.bIgnore = true;
                 $(this).fadeTo('slow', 0.01, function () {
                     $(this).css({ visibility: 'hidden' });
-                    this.bIgnore = true;
                     if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) { newLevel(); }
                 });
                 score.trigger('update', ++nScore);
@@ -180,20 +185,27 @@ $(function () {
         };
 
         $(document).bind('keydown.master', function (ev) {
+            if (!bStarted) {
+                start();
+                bStarted = true;
+                ev.preventDefault();
+                return;
+            }
             if (ev.which === KEY_LEFT && !bPaused) {
                 $ship.trigger('moveShip', -1);
+                ev.preventDefault();
             }
             else if (ev.which === KEY_RIGHT && !bPaused) {
                 $ship.trigger('moveShip', 1);
+                ev.preventDefault();
             }
             else if (ev.which === KEY_SPACE && !bPaused) {
                 $ship.trigger('fire');
+                ev.preventDefault();
             }
             else if (ev.which === KEY_P) {
                 doPause();
-            }
-            else if (ev.which === 79) {
-                $('.alien').eq(4).trigger('fire');
+                ev.preventDefault();
             }
         });
         $(document).bind('keyup', function (ev) {
@@ -222,14 +234,17 @@ $(function () {
 
         var newLevel = function () {
             nLevel += 1;
-            alert(" this really needs to move. level " + nLevel);
+            level.trigger('update', nLevel);
             nFleetMoveInterval *= 0.6;
             nFleetMoveSpeed *= 0.6;
             nAlienFireInterval *= 0.6;
             seedAliens();
         };
 
-        newLevel();
+        var start = function () {
+            bStarted = true;
+            newLevel();
+        }
 
         var bMovedDown = true;
         var bRight = true;
@@ -264,5 +279,5 @@ $(function () {
             alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
         });
 
-    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'));
+    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'), $('#level'));
 });
