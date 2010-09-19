@@ -16,18 +16,6 @@ $(function () {
         var nFleetMoveSpeed = 220;
         var nAlienFireInterval = 700;
 
-        var nRowsOfAliens = 4;
-        var nColumnsOfAliens = 6;
-
-        var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
-        playfield.append($ship);
-
-        $.each([score, lives, level, message], function () {
-            $(this).bind('update', function (event, text) {
-                $(this).text(text);
-            });
-        });
-
         var elIntersect = function (el1, el2) {
             var intersect = function (rect1, rect2) {
                 return !(rect1.bottom < rect2.top || rect1.top > rect2.bottom ||
@@ -45,22 +33,49 @@ $(function () {
             return intersect(boundingRect(el1), boundingRect(el2));
         };
 
+        var shipbulletcollisions = {
+            alien: { list: function (bullet) {
+                return $('.alien').filter(function () { return !this.bIgnore && elIntersect(bullet, this); });
+            },
+                oncollide: function () {
+                    this.bIgnore = true;
+                    $(this).fadeTo('slow', 0.01, function () {
+                        $(this).css({ visibility: 'hidden' });
+                        if ($('.alien').filter(function () { return !this.bIgnore }).length < 1) { newLevel(); }
+                    });
+                    score.trigger('update', ++nScore);
+                }
+            },
+            bunker: { list: function () { return []; }, oncollide: function () { } }
+        };
+
+        var nRowsOfAliens = 4;
+        var nColumnsOfAliens = 6;
+
+        var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
+        playfield.append($ship);
+
+        $.each([score, lives, level, message], function () {
+            $(this).bind('update', function (event, text) {
+                $(this).text(text);
+            });
+        });
+
         var bulletDone = function () {
             $(this).remove();
             $ship.nBullets -= 1;
         };
         var shipBulletStep = function () {
-            var bullet = $(this);
-            $('.alien').filter(function () { return !this.bIgnore; }).each(function (ix) {
-                if (!elIntersect(bullet, this)) { return; }
-                this.bIgnore = true;
-                $(this).fadeTo('slow', 0.01, function () {
-                    $(this).css({ visibility: 'hidden' });
-                    if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) { newLevel(); }
-                });
-                score.trigger('update', ++nScore);
-                bullet.remove();
-            });
+            var bullet = $(this), collided = [];
+            for (var type in shipbulletcollisions) {
+                if (shipbulletcollisions.hasOwnProperty(type)) {
+                    collided = shipbulletcollisions[type].list(bullet);
+                    if (collided.length > 0) {
+                        collided.each(shipbulletcollisions[type].oncollide);
+                        bullet.remove();
+                    }
+                }
+            }
         };
 
         $ship.nBullets = 0; //nothing shooting at the moment
