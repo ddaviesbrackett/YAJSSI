@@ -17,6 +17,9 @@ $(function () {
 
         var nRowsOfAliens = 4;
         var nColumnsOfAliens = 6;
+        
+        var bMovedDown = true;
+        var bRight = true;
 
         var elIntersect = function (el1, el2) {
             var intersect = function (rect1, rect2) {
@@ -34,6 +37,50 @@ $(function () {
             };
             return intersect(boundingRect(el1), boundingRect(el2));
         };
+        
+        var seedAliens = function () {
+            fleet.css({ left: 10, top: 10 });
+            bMovedDown = true;
+            bRight = true;
+            var alien = $('<span class="alien"></span>');
+            var innerFleet = fleet.find('div.fleet');
+            innerFleet.html('');
+            var row = $('<div class="fleetRow"></div>');
+            var currentRow;
+            for (var y = 0; y < nRowsOfAliens; y++) {
+                currentRow = row.clone();
+                for (var x = 0; x < nColumnsOfAliens; x++) {
+                    currentRow.append(alien.clone());
+                }
+                innerFleet.append(currentRow);
+            }
+        };
+        
+        var newLevel = function () {
+            nLevel += 1;
+            level.trigger('update', nLevel);
+            nFleetMoveInterval *= 0.6;
+            nFleetMoveSpeed *= 0.6;
+            nAlienFireInterval *= 0.6;
+            seedAliens();
+        };
+
+        var doPause = function (force) {
+            if (force) {
+                bPaused = force !== 'pause'; //invert and follow on to the rest
+            }
+
+            if (!bPaused) {
+                $('.bullet').trigger('pause');
+                bPaused = true;
+                message.trigger('update', 'Paused'); message.show();
+            }
+            else {
+                bPaused = false;
+                message.trigger('update', " "); message.hide();
+                $('.bullet').trigger('resume');
+            }
+        };
 
         var shipbulletcollisions = {
             alien: { list: function (bullet) {
@@ -43,7 +90,7 @@ $(function () {
                     this.bIgnore = true;
                     $(this).fadeTo('slow', 0.01, function () {
                         $(this).css({ visibility: 'hidden' });
-                        if ($('.alien').filter(function () { return !this.bIgnore }).length < 1) { newLevel(); }
+                        if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) { newLevel(); }
                     });
                     score.trigger('update', ++nScore);
                 }
@@ -180,25 +227,8 @@ $(function () {
             });
             event.preventDefault();
             event.stopPropagation();
-        }
-        $ship.bind('moveShip', moveShip);
-
-        var doPause = function (force) {
-            if (force) {
-                bPaused = force !== 'pause'; //invert and follow on to the rest
-            }
-
-            if (!bPaused) {
-                $('.bullet').trigger('pause');
-                bPaused = true;
-                message.trigger('update', 'Paused'); message.show();
-            }
-            else {
-                bPaused = false;
-                message.trigger('update', " "); message.hide();
-                $('.bullet').trigger('resume');
-            }
         };
+        $ship.bind('moveShip', moveShip);
 
         $(document).bind('keydown.master', function (ev) {
             if (!bStarted) {
@@ -231,40 +261,11 @@ $(function () {
             }
         });
 
-        var seedAliens = function () {
-            fleet.css({ left: 10, top: 10 });
-            bMovedDown = true;
-            bRight = true;
-            var alien = $('<span class="alien"></span>');
-            var innerFleet = fleet.find('div.fleet');
-            innerFleet.html('');
-            var row = $('<div class="fleetRow"></div>');
-            var currentRow;
-            for (var y = 0; y < nRowsOfAliens; y++) {
-                currentRow = row.clone();
-                for (var x = 0; x < nColumnsOfAliens; x++) {
-                    currentRow.append(alien.clone());
-                }
-                innerFleet.append(currentRow);
-            }
-        };
-
-        var newLevel = function () {
-            nLevel += 1;
-            level.trigger('update', nLevel);
-            nFleetMoveInterval *= 0.6;
-            nFleetMoveSpeed *= 0.6;
-            nAlienFireInterval *= 0.6;
-            seedAliens();
-        };
-
         var start = function () {
             bStarted = true;
             newLevel();
-        }
+        };
 
-        var bMovedDown = true;
-        var bRight = true;
         var moveFleet = function () {
             var pos = fleet.position();
             pos.right = pos.left + fleet.width();
