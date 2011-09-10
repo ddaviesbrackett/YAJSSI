@@ -1,4 +1,3 @@
-﻿/// <reference path="scripts/jquery-1.4.2-vsdoc.js">
 $(function () {
     (function (playfield, fleet, score, lives, level, message) {
         var KEY_LEFT = 37;
