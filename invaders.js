@@ -16,6 +16,9 @@ $(function () {
         var nFleetMoveSpeed = 220;
         var nAlienFireInterval = 700;
 
+        var nRowsOfAliens = 4;
+        var nColumnsOfAliens = 6;
+
         var elIntersect = function (el1, el2) {
             var intersect = function (rect1, rect2) {
                 return !(rect1.bottom < rect2.top || rect1.top > rect2.bottom ||
@@ -48,9 +51,6 @@ $(function () {
             },
             bunker: { list: function () { return []; }, oncollide: function () { } }
         };
-
-        var nRowsOfAliens = 4;
-        var nColumnsOfAliens = 6;
 
         var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
         playfield.append($ship);
@@ -91,7 +91,7 @@ $(function () {
             });
         };
         var onFire = function (ev) {
-            if ($ship.nBullets < 2) {
+            if ($ship.nBullets < 5) {
                 $ship.nBullets += 1;
                 var b = $('<span class="bullet shipBullet"></span>');
                 b.bind('pause', onBulletPause);
@@ -106,6 +106,7 @@ $(function () {
             }
         };
         $ship.bind('fire', onFire);
+
         var alienBulletStep = function () {
             if (!$ship.isDying) {
                 var complete = false;
@@ -195,7 +196,7 @@ $(function () {
             }
             else {
                 bPaused = false;
-                message.trigger('update', ""); message.hide();
+                message.trigger('update', " "); message.hide();
                 $('.bullet').trigger('resume');
             }
         };
