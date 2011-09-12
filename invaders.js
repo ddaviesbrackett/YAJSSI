@@ -1,5 +1,4 @@
-$(function () {
-    (function (playfield, fleet, score, lives, level, message) {
+ var invaders = function (playfield, fleet, score, lives, level, message) {
         var KEY_LEFT = 37;
         var KEY_RIGHT = 39;
         var KEY_SPACE = 32;
@@ -18,8 +17,14 @@ $(function () {
         var nRowsOfAliens = 4;
         var nColumnsOfAliens = 6;
         
-        var bMovedDown = true;
-        var bRight = true;
+        var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
+        playfield.append($ship);
+
+        $.each([score, lives, level, message], function () {
+            $(this).bind('update', function (event, text) {
+                $(this).text(text);
+            });
+        });
 
         var elIntersect = function (el1, el2) {
             var intersect = function (rect1, rect2) {
@@ -38,23 +43,53 @@ $(function () {
             return intersect(boundingRect(el1), boundingRect(el2));
         };
         
-        var seedAliens = function () {
-            fleet.css({ left: 10, top: 10 });
-            bMovedDown = true;
-            bRight = true;
-            var alien = $('<span class="alien"></span>');
-            var innerFleet = fleet.find('div.fleet');
-            innerFleet.html('');
-            var row = $('<div class="fleetRow"></div>');
-            var currentRow;
-            for (var y = 0; y < nRowsOfAliens; y++) {
-                currentRow = row.clone();
-                for (var x = 0; x < nColumnsOfAliens; x++) {
-                    currentRow.append(alien.clone());
+        var oFleet = (function() {
+            var bMovedDown = true;
+            var bRight = true;
+            return {
+                seed: function() {
+                    fleet.css({
+                        left: 10,
+                        top: 10
+                    });
+                    bMovedDown = true;
+                    bRight = true;
+                    var alien = $('<span class="alien"></span>');
+                    var innerFleet = fleet.find('div.fleet');
+                    innerFleet.html('');
+                    var row = $('<div class="fleetRow"></div>');
+                    var currentRow;
+                    for (var y = 0; y < nRowsOfAliens; y++) {
+                        currentRow = row.clone();
+                        for (var x = 0; x < nColumnsOfAliens; x++) {
+                            currentRow.append(alien.clone());
+                        }
+                        innerFleet.append(currentRow);
+                    }
+                },
+                move: function() {
+                    var pos = fleet.position();
+                    pos.right = pos.left + fleet.width();
+                    var nRight = 0;
+                    var nDown = 0;
+                    if (!bPaused) {
+                        if (!bMovedDown && (pos.left < 16 || pos.right > playfield.width())) {
+                            nDown = 10;
+                            bMovedDown = true;
+                            bRight = !bRight;
+                        }
+                        else {
+                            nRight = 16;
+                            bMovedDown = false;
+                        }
+                    }
+                    fleet.animate({
+                        left: "+=" + (bRight ? "" : "-") + nRight,
+                        top: "+=" + nDown
+                    }, nFleetMoveSpeed);
                 }
-                innerFleet.append(currentRow);
-            }
-        };
+            };
+        }());
         
         var newLevel = function () {
             nLevel += 1;
@@ -62,7 +97,7 @@ $(function () {
             nFleetMoveInterval *= 0.6;
             nFleetMoveSpeed *= 0.6;
             nAlienFireInterval *= 0.6;
-            seedAliens();
+            oFleet.seed();
         };
 
         var doPause = function (force) {
@@ -82,90 +117,105 @@ $(function () {
             }
         };
 
-        var shipbulletcollisions = {
-            alien: { list: function (bullet) {
-                return $('.alien').filter(function () { return !this.bIgnore && elIntersect(bullet, this); });
-            },
-                oncollide: function () {
-                    this.bIgnore = true;
-                    $(this).fadeTo('slow', 0.01, function () {
-                        $(this).css({ visibility: 'hidden' });
-                        if ($('.alien').filter(function () { return !this.bIgnore; }).length < 1) { newLevel(); }
-                    });
-                    score.trigger('update', ++nScore);
+        var oShipBullet = (function() {
+            var nShipBullets = 0;
+            var shipbulletcollisions = {
+                alien: {
+                    list: function(bullet) {
+                        return $('.alien').filter(function() {
+                            return !this.bIgnore && elIntersect(bullet, this);
+                        });
+                    },
+                    oncollide: function() {
+                        this.bIgnore = true;
+                        $(this).fadeTo('slow', 0.01, function() {
+                            $(this).css({
+                                visibility: 'hidden'
+                            });
+                            if ($('.alien').filter(function() {
+                                return !this.bIgnore;
+                            }).length < 1) {
+                                newLevel();
+                            }
+                        });
+                        score.trigger('update', ++nScore);
+                    }
+                },
+                bunker: {
+                    list: function() {
+                        return [];
+                    },
+                    oncollide: function() {}
                 }
-            },
-            bunker: { list: function () { return []; }, oncollide: function () { } }
-        };
-
-        var $ship = $('<div id="shipmover"><div id="ship"></div></div>'); //outer div moves; inner div explodes
-        playfield.append($ship);
-
-        $.each([score, lives, level, message], function () {
-            $(this).bind('update', function (event, text) {
-                $(this).text(text);
-            });
-        });
-
-        var bulletDone = function () {
-            $(this).remove();
-            $ship.nBullets -= 1;
-        };
-        var shipBulletStep = function () {
-            var bullet = $(this), collided = [];
-            for (var type in shipbulletcollisions) {
-                if (shipbulletcollisions.hasOwnProperty(type)) {
-                    collided = shipbulletcollisions[type].list(bullet);
-                    if (collided.length > 0) {
-                        collided.each(shipbulletcollisions[type].oncollide);
-                        bullet.remove();
+            };
+            var bulletDone = function() {
+                    $(this).remove();
+                    nShipBullets -= 1;
+                };
+            
+            var step = function() {
+                    var bullet = $(this),
+                        collided = [];
+                    for (var type in shipbulletcollisions) {
+                        if (shipbulletcollisions.hasOwnProperty(type)) {
+                            collided = shipbulletcollisions[type].list(bullet);
+                            if (collided.length > 0) {
+                                collided.each(shipbulletcollisions[type].oncollide);
+                                bullet.remove();
+                            }
+                        }
+                    }
+                };
+            var pause = function() {
+                    $(this).stop();
+                };
+            var resume = function(ev) {
+                    $(this).animate({
+                        bottom: playfield.height()
+                    }, {
+                        duration: 1500 * (1 - $(this).css('bottom').replace(/px$/, "") / playfield.height()),
+                        easing: 'linear',
+                        complete: bulletDone,
+                        step: step
+                    });
+                };
+            return {
+                fire: function(ev) {
+                    if (nShipBullets < 5) {
+                        nShipBullets += 1;
+                        var b = $('<span class="bullet shipBullet"></span>');
+                        b.bind('pause', pause);
+                        b.bind('resume', resume);
+                        playfield.append(b.css({
+                            left: $ship.position().left + 8
+                        }));
+                        b.animate({
+                            bottom: playfield.height()
+                        }, {
+                            duration: 1500,
+                            easing: 'linear',
+                            complete: bulletDone,
+                            step: step
+                        });
                     }
                 }
-            }
-        };
-
-        $ship.nBullets = 0; //nothing shooting at the moment
-        var onBulletPause = function () {
-            $(this).stop();
-        };
-        var onBulletResume = function (ev) {
-            $(this).animate({ bottom: playfield.height() }, {
-                duration: 1500 * (1 - $(this).css('bottom').replace(/px$/, "") / playfield.height()),
-                easing: 'linear',
-                complete: bulletDone,
-                step: shipBulletStep
-            });
-        };
-        var onFire = function (ev) {
-            if ($ship.nBullets < 5) {
-                $ship.nBullets += 1;
-                var b = $('<span class="bullet shipBullet"></span>');
-                b.bind('pause', onBulletPause);
-                b.bind('resume', onBulletResume);
-                playfield.append(b.css({ left: $ship.position().left + 8 }));
-                b.animate({ bottom: playfield.height() }, {
-                    duration: 1500,
-                    easing: 'linear',
-                    complete: bulletDone,
-                    step: shipBulletStep
-                });
-            }
-        };
-        $ship.bind('fire', onFire);
-
-        var alienBulletStep = function () {
-            if (!$ship.isDying) {
+            };
+        }());
+        $ship.bind('fire', oShipBullet.fire);
+        
+        
+        var killShip = function(bullet) {
                 var complete = false;
-                var bullet = $(this);
-                if (!elIntersect(bullet, $ship)) { return; }
                 $ship.isDying = true;
                 $ship.stop(true);
                 bullet.stop(true);
                 doPause('pause');
                 message.trigger('update', " "); //suppress the paused message
-                $ship.find('div#ship').animate({ opacity: 'hide' }, {
+                $ship.find('div#ship').animate({
+                    opacity: 'hide'
+                }, {
                     speed: 'slow',
-                    complete: function () {
+                    complete: function() {
                         if (!complete) {
                             complete = true;
                             bullet.remove();
@@ -176,11 +226,13 @@ $(function () {
                             }
                             else {
                                 lives.trigger('update', nLives);
-                                setTimeout(function () {
-                                    $ship.find('div#ship').animate({ opacity: 'show' }, {
+                                setTimeout(function() {
+                                    $ship.find('div#ship').animate({
+                                        opacity: 'show'
+                                    }, {
                                         speed: 'fast',
                                         queue: false,
-                                        complete: function () {
+                                        complete: function() {
                                             $ship.isDying = false;
                                             doPause('resume');
                                         }
@@ -190,32 +242,54 @@ $(function () {
                         }
                     }
                 });
-            }
-        };
-        var alienBulletResume = function () {
-            $(this).animate({ top: playfield.height() }, {
-                duration: 1500 * (1 - $(this).css('top').replace(/px$/, "") / playfield.height()),
-                easing: 'linear',
-                complete: function () { $(this).remove(); },
-                step: alienBulletStep
-            });
-        };
-        var onAlienFire = function (ev) {
-            var b = $('<span class="bullet alienBullet"></span>');
-            var alien = $(this);
-            var aOffset = alien.offset();
-            b.bind('pause', onBulletPause);
-            b.bind('resume', alienBulletResume);
-            playfield.before(b.css({ left: aOffset.left + 8, top: aOffset.top + alien.height() }));
-            b.animate({ top: playfield.height() }, {
+            };
+        var oAlienBullet = (function() {
+            var step = function() {
+                    if (!$ship.isDying) {
+                        var bullet = $(this);
+                        if (elIntersect(bullet, $ship)) {
+                            killShip(bullet);
+                        }
+                    }
+                };
+            var complete = function() {
+                    $(this).remove();
+                };
+            var animOpts = {
                 duration: 1500,
                 easing: 'linear',
-                complete: function () { $(this).remove(); },
-                step: alienBulletStep
-            });
-        };
+                complete: complete,
+                step: step
+            };
+            var pause = function() {
+                    $(this).stop();
+                };
+            var resume = function() {
+                    $(this).animate({
+                        top: playfield.height()
+                    }, $.extend(animOpts, {
+                        duration: 1500 * (1 - $(this).css('top').replace(/px$/, "") / playfield.height())
+                    }));
+                };
+            return {
+                fire: function(ev) {
+                    var b = $('<span class="bullet alienBullet"></span>');
+                    var alien = $(this);
+                    var aOffset = alien.offset();
+                    b.bind('pause', pause);
+                    b.bind('resume', resume);
+                    playfield.before(b.css({
+                        left: aOffset.left + 8,
+                        top: aOffset.top + alien.height()
+                    }));
+                    b.animate({
+                        top: playfield.height()
+                    }, animOpts);
+                }
+            };
+        }());
+        $('.alien').live('fire', oAlienBullet.fire);
 
-        $('.alien').live('fire', onAlienFire);
 
         var moveShip = function (event, dir) {
             if ($ship.isDying) { return; }
@@ -264,25 +338,8 @@ $(function () {
         var start = function () {
             bStarted = true;
             newLevel();
-        };
-
-        var moveFleet = function () {
-            var pos = fleet.position();
-            pos.right = pos.left + fleet.width();
-            var nRight = 0;
-            var nDown = 0;
-            if (!bPaused) {
-                if (!bMovedDown && (pos.left < 16 || pos.right > playfield.width())) {
-                    nDown = 10;
-                    bMovedDown = true;
-                    bRight = !bRight;
-                }
-                else {
-                    nRight = 16;
-                    bMovedDown = false;
-                }
-            }
-            fleet.animate({ left: "+=" + (bRight ? "" : "-") + nRight, top: "+=" + nDown }, nFleetMoveSpeed);
+            lives.trigger('update', nLives);
+            score.trigger('update', nScore);
         };
 
         var alienFire = function () {
@@ -292,10 +349,11 @@ $(function () {
             }
         };
 
-        $(window).load(function () {
-            fleetInterval = window.setInterval(moveFleet, nFleetMoveInterval);
-            alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
-        });
+        fleetInterval = window.setInterval(oFleet.move, nFleetMoveInterval);
+        alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
 
-    })($('#pf'), $('table.fleet'), $('#score'), $('#lives'), $('#level'), $('#message'));
-});
+    };
+    
+    var initInvaders = function() {
+        invaders($('#pf'), $('table.fleet'), $('#score'), $('#lives'), $('#level'), $('#message'));
+    };

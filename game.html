@@ -1,28 +1,30 @@
-﻿<!DOCTYPE html>   
+<!DOCTYPE html>   
 <html>
 <head>
     <title>Space Invaders</title>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="invaders.js"></script>
-    <link rel="Stylesheet" href="invaders.css" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <link rel="stylesheet" href="invaders.css" />
 </head>
 <body>
-<table border="0" cellpadding="0" cellspacing="0">
-    <tr>
-        <td class="scoring">
-            Score:<span id="score">0</span><br />
-            Lives:<span id="lives">3</span><br />
-            Level:<span id="level">-</span>
-        </td>
-        <td>
-            <div id="pf">
-                <table border="0" cellspacing="0" cellpadding="0" class="fleet" style="left:10px; top:10px;"><tr><td><div class="fleet"></div></td></tr></table>
-                <div id="message">press any key to begin</div>
-            </div>
-        </td>
-    </tr>
-</table>
-<div class="instructions">P to pause, left/right move, Space to shoot</div>
-
+    <table border="0" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="scoring">
+                Score:<span id="score">-</span><br />
+                Lives:<span id="lives">-</span><br />
+                Level:<span id="level">-</span>
+            </td>
+            <td>
+                <div id="pf">
+                    <table border="0" cellspacing="0" cellpadding="0" class="fleet" style="left:10px; top:10px;"><tr><td><div class="fleet"></div></td></tr></table>
+                    <div id="message">press any key to begin</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="instructions">P to pause, left/right move, Space to shoot</div>
+    <script type="text/javascript" src="invaders.js"></script>
+    <script type="text/javascript">
+        initInvaders();
+    </script>
 </body>
 </html>
