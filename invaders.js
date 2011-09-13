@@ -293,108 +293,52 @@
              };
          }());
          $('.alien').live('fire', oAlienBullet.fire);
-         $(document).bind('keydown.master', function(ev) {
-             if (!bStarted) {
-                 start();
-                 bStarted = true;
-                 message.hide();
-                 ev.preventDefault();
-                 return;
-             }
-             if (ev.which === KEY_LEFT && !bPaused) {
-                 $ship.trigger('moveShip', -1);
-                 ev.preventDefault();
-             }
-             else if (ev.which === KEY_RIGHT && !bPaused) {
-                 $ship.trigger('moveShip'
-                 oveShip ', 1);
-                 ev.preventDefault();
-             }
-             else if (ev.which === KEY_SPACE && !bPaused) {
-                 $ship.trigger('
-                 1);
-                 ev.preventDefault();
-             }
-             else if (ev.which === KEY_SPACE && !bPaused) {
-                 $ship.trigger('fire'
-                 ire ');
-                 ev.preventDefault();
-             }
-             else if (ev.which === KEY_P) {
-                 doPause();
-                 ev.preventDefault();
-             }
-         });
-         $(document).bind(';
-                 ev.preventDefault();
-                 }
-                 else if (ev.which === KEY_P) {
-                     doPause();
-                     ev.preventDefault();
-                 }
-             });
-         $(document).bind('keyup'
-         eyup ', function (ev) {
-             if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !$ship.isDying) {
-                 $ship.stop();
-             }
-         });
- 
-         var start = function () {
+         $(document).bind('keydown.master', function (ev) {
+            if (!bStarted) {
+                start();
+                bStarted = true;
+                message.hide();
+                ev.preventDefault();
+                return;
+            }
+            if (ev.which === KEY_LEFT && !bPaused) {
+                $ship.trigger('moveShip', -1);
+                ev.preventDefault();
+            }
+            else if (ev.which === KEY_RIGHT && !bPaused) {
+                $ship.trigger('moveShip', 1);
+                ev.preventDefault();
+            }
+            else if (ev.which === KEY_SPACE && !bPaused) {
+                $ship.trigger('fire');
+                ev.preventDefault();
+            }
+            else if (ev.which === KEY_P) {
+                doPause();
+                ev.preventDefault();
+            }
+        });
+          $(document).bind('keyup', function (ev) {
+            if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !$ship.isDying) {
+                $ship.stop();
+            }
+        });
+         var start = function() {
              bStarted = true;
              newLevel();
-             lives.trigger('
-         function(ev) {
-             if ((ev.which === KEY_LEFT || ev.which === KEY_RIGHT) && !$ship.isDying) {
-                 $ship.stop();
-             }
-         });
-         var start = function() {
-                 bStarted = true;
-                 newLevel();
-                 lives.trigger('update'
-                 pdate ', nLives);
-             score.trigger('
-                 nLives);
-                 score.trigger('update'
-                 pdate ', nScore);
+             lives.trigger('update', nLives);
+             score.trigger('update', nScore);
          };
- 
-         var alienFire = function () {
-             if (!bPaused) {
-                 var aliens = $('
-                 nScore);
-             };
          var alienFire = function() {
                  if (!bPaused) {
-                     var aliens = $('.alien'
-                     alien ').filter(function () { return !this.bIgnore; }), num = aliens.length * 2;
-                 aliens.eq(Math.round(Math.random() * num)).trigger('.filter(function() {
+                     var aliens = $('.alien').filter(function() {
                          return !this.bIgnore;
-                     }), num = aliens.length * 2;
-                     aliens.eq(Math.round(Math.random() * num)).trigger('fire'
-                     ire '); //num is double, so eq only finds an element half the time, so they only fire half the time
-             }
-         };
- 
+                     }),
+                         num = aliens.length * 2;
+                     aliens.eq(Math.round(Math.random() * num)).trigger('fire'); //num is double, so eq only finds an element half the time, so they only fire half the time
+                 }
+             };
          fleetInterval = window.setInterval(oFleet.move, nFleetMoveInterval);
          alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
- 
-     };
+    };
      
-     var initInvaders = function() {
-         invaders($('; //num is double, so eq only finds an element half the time, so they only fire half the time
-                     }
-                     };
-                     fleetInterval = window.setInterval(oFleet.move, nFleetMoveInterval);
-                     alienFireInterval = window.setInterval(alienFire, nAlienFireInterval);
-                 };
-                 var initInvaders = function() {
-                         invaders($('#pf'
-                         pf '), $(', $('table.fleet'
-                         able.fleet '), $(', $('#score'
-                         score '), $(', $('#lives'
-                         lives '), $(', $('#level'
-                         level '), $(', $('#message'
-                         message '));
-     };
